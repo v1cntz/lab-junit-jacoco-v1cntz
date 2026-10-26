@@ -1,57 +1,68 @@
-# Relatório do Laboratório: JUnit 5
+# relatorio do laboratorio: junit 5
 
-**Dupla:** _Nome 1_ e _Nome 2_
-**Link do fork:** _https://github.com/..._
+**dupla:** vicente ferreira maciel neto 598581 (so eu msm)
+**link do fork:** https://github.com/v1cntz/lab-junit-jacoco-v1cntz
 
-## 1. Resultado final
+## 1. resultado final
 
-Cole aqui o resumo que aparece no final de `java scripts/Rodar.java`:
-
+```text
+Test run finished after 134 ms
+[        11 containers found      ]
+[         0 containers skipped    ]
+[        11 containers started    ]
+[         0 containers aborted    ]
+[        11 containers successful ]
+[         0 containers failed     ]
+[        58 tests found           ]
+[         0 tests skipped         ]
+[        58 tests started         ]
+[         0 tests aborted         ]
+[        58 tests successful      ]
+[         0 tests failed          ]
 ```
-(cole aqui)
-```
 
-## 2. Nível 1: `if`s de `Conta`
+## 2. nivel 1: `if`s de `Conta`
 
-Para cada `if` de `Conta.java`, diga qual teste faz o `if` ser **verdadeiro** e qual faz ser **falso**
-(escreva o nome do método de teste).
-
-| `if` (condição) | Teste que torna **verdadeiro** | Teste que torna **falso** |
+| condicao | teste que torna verdadeiro | teste que torna falso |
 |---|---|---|
-| saldo inicial negativo (construtor) | | |
-| valor do depósito `<= 0` | | |
-| valor do saque `<= 0` | | |
-| saque maior que o saldo | | |
+| saldo inicial negativo | `saldoInicialNegativoDeveVirarZero` | `contaNovaDeveGuardarTitularESaldoInicial` |
+| deposito <= 0 | `depositoComValorNegativoDeveSerRecusado`, `depositoZeroDeveSerRecusado` | `depositoValidoDeveAumentarOSaldo` |
+| saque <= 0 | `saqueNegativoDeveSerRecusado`, `saqueZeroDeveSerRecusado` | `saqueValidoDeveDiminuirOSaldo` |
+| saque maior que saldo | `saqueMaiorQueOSaldoDeveSerRecusado` | `saqueValidoDeveDiminuirOSaldo`, `saqueDoSaldoExatoDeveSerPermitidoEZerarAConta` |
 
-## 3. Nível 2: regras de `ServicoTransferencia`
+## 3. nivel 2: regras de `ServicoTransferencia`
 
-| Regra | Teste(s) que a exercita(m) |
+| regra | testes |
 |---|---|
-| R1 mesma conta | |
-| R2 valor <= 0 | |
-| R3 acima do limite de 5.000 (e 5.000 exatos permitido) | |
-| R4 saldo insuficiente para valor + tarifa (nada é alterado); tarifa de 1% acima de 1.000 (1.000 exatos sem tarifa) | |
-| R5 transferência OK: saldos da origem e do destino | |
+| r1 mesma conta | `mesmaContaDeveSerRecusada`; `mesmaContaTemPrioridadeSobreValorInvalido` |
+| r2 valor <= 0 | `transferenciaZeroDeveSerRecusada`; `transferenciaNegativaDeveSerRecusada` |
+| r3 limite | `transferenciaAcimaDoLimiteDeveSerRecusada` (5000,01); `transferenciaDeExatamente5000DeveSerPermitida` (5000) |
+| r4 saldo e tarifa | `saldoInsuficienteParaValorMaisTarifaNaoAlteraNenhumaConta`; `saldoExatoParaValorMaisTarifaDeveSerAceito`; `transferenciaAcimaDe1000PagaTarifaDe1Porcento`; `transferenciaDeExatamente1000NaoPagaTarifa`; `transferenciaLogoAcimaDe1000PagaTarifa` |
+| r5 transferencia ok | `transferenciaPequenaDeveSerAceitaSemTarifa`; `transferenciaAcimaDe1000PagaTarifaDe1Porcento`; `saldoExatoParaValorMaisTarifaDeveSerAceito` |
 
-## 4. Nível 3: regras de `AnalisadorEmprestimo`
+## 4. nivel 3: regras de `AnalisadorEmprestimo`
 
-| Regra | Cenário escolhido (entradas → decisão esperada) | Método de teste |
+| regra | cenario escolhido e resultado esperado | metodo |
 |---|---|---|
-| 1. entradas inválidas → DADOS_INVALIDOS (cada uma das 6 condições) | | |
-| 2. score < 300 → NEGADO | | |
-| 3. taxa por faixa de score (800 / 600) | | |
-| 4. parcela (Price) | | |
-| 5. comprometimento > 50% → NEGADO; > 30% → ANÁLISE MANUAL | | |
-| 6. comprometimento <= 30%: score >= 600 aprovado; abaixo, análise manual | | |
+| 1. dados invalidos | score -1/1001; renda 0/-1; valor 0/-1; parcelas 0/361. uma condicao invalida por caso, demais validas: dados_invalidos | `entradasInvalidasDevemSerRecusadas` |
+| 2. score < 300 | score 0 e 299: negado. score 300 e prestacao baixa: analise_manual | `scoreEParcelasNosLimitesValidos` |
+| 3. taxas | score 300/599: 36%; 600/799: 24%; 800/1000: 12% ao ano | `taxaAnualDeveRespeitarFaixas` |
+| 4. price | 1000, 1% mensal, 1 mes: 1010; 1000, 2%, 12 meses: 94,5595966; 12000, 1%, 12 meses: 1066,1854641 | `parcelaPriceDeveTerValorEsperado` |
+| 5. comprometimento | score 800, valor 1000, 1 mes: parcela 1010. renda 2019,99: negado; 2020: manual. renda 3366,66: manual; 3366,67: aprovado. score 600, parcela 1020 / renda 2040: 50%, manual | `decisaoDeveConsiderarParcelaRendaEScore`; `comprometimentoExatoDe50PorcentoDeveIrParaAnalise` |
+| 6. comprometimento <= 30% | score 600, valor 1000, 1 mes, renda 3400: parcela 1020 e comprometimento 30%, aprovado. score 599, renda 10000: manual | `comprometimentoExatoDe30PorcentoDeveSerAprovado`; `decisaoDeveConsiderarParcelaRendaEScore` |
 
-## 5. Reflexão (2 a 4 linhas cada)
+## 5. reflexao
 
-1. **Os dois lados do `if`:** qual `if` ficou sem teste de um dos lados no começo? Que bug passaria
-   despercebido por isso?
-2. **Valor-limite:** qual teste de fronteira (ex.: 1.000,00 / 5.000,00 / score 600) vocês acham
-   mais importante? Que bug ele pegaria se o código usasse `>=` no lugar de `>`?
-3. **Nível 3:** como vocês decidiram quais cenários testar? (classes de equivalência, fronteiras,
-   leitura das regras...)
-4. **Teste que passa mas não protege:** descrevam um teste que executa o código e passa, mas não
-   verificaria um erro (dica: um teste sem `assert`).
-5. **Divisão do trabalho:** quem escreveu o quê? (uma linha)
+1. **os dois lados do `if`:** faltava testar saque negativo.
+   sem esse teste, o saque podia aumentar o saldo e passar.
+
+2. **valor-limite:** sacar o saldo todo tem que funcionar.
+   se trocar > por >=, ele recusa o saque e o teste pega isso.
+
+3. **nivel 3:** os testes seguem as regras e os valores no limite.
+   tem caso de dado errado, score baixo, juros e parcela alta pra renda.
+
+4. **teste sem assert:** so chamar sacar(30) nao confere nada.
+   pode tirar o valor errado e o teste passar mesmo assim.
+
+5. **divisao do trabalho:** fiz sozinho, com ajuda do codex nos testes.

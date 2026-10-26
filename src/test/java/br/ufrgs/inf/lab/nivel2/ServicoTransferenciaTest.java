@@ -1,97 +1,136 @@
 package br.ufrgs.inf.lab.nivel2;
 
 import static org.junit.jupiter.api.Assertions.*;
-
+import org.junit.jupiter.api.Test;
 import br.ufrgs.inf.lab.nivel1.Conta;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 
-/**
- * NÍVEL 2 (semi-guiado): ServicoTransferencia.
- *
- * Aqui NÃO há os asserts: cada teste abaixo diz o CENÁRIO e o que deve
- * ser verificado. Você decide como escrever (assertEquals, assertTrue...).
- * Leia as regras R1..R5 em ServicoTransferencia.java.
- *
- * Remova o @Disabled e o fail(...) de cada teste à medida que o implementar.
- * Sinta-se livre para ACRESCENTAR testes (e usar @ParameterizedTest).
- */
 class ServicoTransferenciaTest {
+  private static final double DELTA = 0.001;
+  private ServicoTransferencia servico;
+  private Conta origem;
+  private Conta destino;
 
-    private static final double DELTA = 0.001;
+  @BeforeEach
+  void preparar() {
+    servico = new ServicoTransferencia();
+    origem = new Conta("Origem", 10_000.0);
+    destino = new Conta("Destino", 0.0);
+  }
 
-    private ServicoTransferencia servico;
-    private Conta origem;
-    private Conta destino;
+  @Test
+  void transferenciaPequenaDeveSerAceitaSemTarifa() {
 
-    // Roda ANTES de cada teste: garante contas "limpas" (testes independentes)
-    @BeforeEach
-    void preparar() {
-        servico = new ServicoTransferencia();
-        origem = new Conta("Origem", 10_000.0);
-        destino = new Conta("Destino", 0.0);
-    }
+    StatusTransferencia status = servico.transferir(origem, destino, 200.0);
 
-    // ---------------------------------------------------------------
-    // PRONTO (exemplo)
-    // ---------------------------------------------------------------
+    assertEquals(StatusTransferencia.OK, status);
+    assertEquals(0.0, servico.calcularTarifa(200.0), DELTA);
+    assertEquals(9800.0, origem.getSaldo(), DELTA);
+    assertEquals(200.0, destino.getSaldo(), DELTA);
+  }
 
-    @Test
-    void transferenciaPequenaDeveSerAceitaSemTarifa() {
-        StatusTransferencia status = servico.transferir(origem, destino, 200.0);
+  @Test
+  void transferenciaAcimaDe1000PagaTarifaDe1Porcento() {
 
-        assertEquals(StatusTransferencia.OK, status);
-        assertEquals(9_800.0, origem.getSaldo(), DELTA);
-        assertEquals(200.0, destino.getSaldo(), DELTA);
-    }
+    StatusTransferencia status = servico.transferir(origem, destino, 2000.0);
 
-    // ---------------------------------------------------------------
-    // PARA VOCÊ ESCREVER
-    // ---------------------------------------------------------------
+    assertEquals(StatusTransferencia.OK, status);
+    assertEquals(20.0, servico.calcularTarifa(2000.0), DELTA);
+    assertEquals(7980.0, origem.getSaldo(), DELTA);
+    assertEquals(2000.0, destino.getSaldo(), DELTA);
+  }
 
-    @Test
-    @Disabled("N2-A")
-    void transferenciaAcimaDe1000PagaTarifaDe1Porcento() {
-        // DADO   origem com 10.000 e destino com 0
-        // QUANDO transfere 2.000
-        // ENTÃO  status = ?  | calcularTarifa(2000) = ?  | saldo da origem = ?  | saldo do destino = ?
-        //        (calcule os valores esperados na mão ANTES de rodar!)
-        fail("Escreva o teste N2-A");
-    }
+  @Test
+  void transferenciaDeExatamente1000NaoPagaTarifa() {
 
-    @Test
-    @Disabled("N2-B")
-    void transferenciaDeExatamente1000NaoPagaTarifa() {
-        // Valor-limite da regra R4: "ACIMA de 1.000" ... e 1.000 exatos?
-        // Verifique o status, a tarifa e os saldos.
-        fail("Escreva o teste N2-B");
-    }
+    StatusTransferencia status = servico.transferir(origem, destino, 1000.0);
 
-    @Test
-    @Disabled("N2-C")
-    void transferenciaAcimaDoLimiteDeveSerRecusada() {
-        // Qual status? Qual o valor mínimo que ultrapassa o limite (R3)?
-        // E um teste com EXATAMENTE o limite: o que deveria acontecer?
-        // Verifique também que nenhuma conta foi alterada.
-        fail("Escreva o teste N2-C");
-    }
+    assertEquals(StatusTransferencia.OK, status);
+    assertEquals(0.0, servico.calcularTarifa(1000.0), DELTA);
+    assertEquals(9000.0, origem.getSaldo(), DELTA);
+    assertEquals(1000.0, destino.getSaldo(), DELTA);
+  }
 
-    @Test
-    @Disabled("N2-D")
-    void saldoInsuficienteParaValorMaisTarifaNaoAlteraNenhumaConta() {
-        // DICA: crie uma conta de origem com saldo suficiente para o VALOR,
-        //       mas NÃO suficiente para VALOR + TARIFA (ex.: saldo 2.000, valor 2.000).
-        // Verifique o status e que origem E destino mantêm os saldos originais.
-        fail("Escreva o teste N2-D");
-    }
+  @Test
+  void transferenciaLogoAcimaDe1000PagaTarifa() {
 
-    @Test
-    @Disabled("N2-E")
-    void mesmaContaEValorInvalidoDevemSerRecusados() {
-        // Cubra R1 (mesma conta) e R2 (valor zero e valor negativo).
-        // Quantos testes/asserts você precisa para exercitar os DOIS lados de cada "if"?
-        // Em todos os casos, confira o status E que os saldos não mudaram.
-        fail("Escreva o teste N2-E");
-    }
+    StatusTransferencia status = servico.transferir(origem, destino, 1000.01);
+
+    assertEquals(StatusTransferencia.OK, status);
+    assertEquals(10.0001, servico.calcularTarifa(1000.01), DELTA);
+    assertEquals(8989.9899, origem.getSaldo(), DELTA);
+    assertEquals(1000.01, destino.getSaldo(), DELTA);
+  }
+
+  @Test
+  void transferenciaDeExatamente5000DeveSerPermitida() {
+
+    StatusTransferencia status = servico.transferir(origem, destino, 5000.0);
+
+    assertEquals(StatusTransferencia.OK, status);
+    assertEquals(50.0, servico.calcularTarifa(5000.0), DELTA);
+    assertEquals(4950.0, origem.getSaldo(), DELTA);
+    assertEquals(5000.0, destino.getSaldo(), DELTA);
+  }
+
+  @Test
+  void transferenciaAcimaDoLimiteDeveSerRecusada() {
+    StatusTransferencia status = servico.transferir(origem, destino, 5000.01);
+    assertEquals(StatusTransferencia.ACIMA_DO_LIMITE, status);
+    assertEquals(10_000.0, origem.getSaldo(), DELTA);
+    assertEquals(0.0, destino.getSaldo(), DELTA);
+  }
+
+  @Test
+  void mesmaContaDeveSerRecusada() {
+    StatusTransferencia status = servico.transferir(origem, origem, 200.0);
+    assertEquals(StatusTransferencia.MESMA_CONTA, status);
+    assertEquals(10_000.0, origem.getSaldo(), DELTA);
+    assertEquals(0.0, destino.getSaldo(), DELTA);
+  }
+
+  @Test
+  void transferenciaZeroDeveSerRecusada() {
+    StatusTransferencia status = servico.transferir(origem, destino, 0.0);
+    assertEquals(StatusTransferencia.VALOR_INVALIDO, status);
+    assertEquals(10_000.0, origem.getSaldo(), DELTA);
+    assertEquals(0.0, destino.getSaldo(), DELTA);
+  }
+
+  @Test
+  void transferenciaNegativaDeveSerRecusada() {
+    StatusTransferencia status = servico.transferir(origem, destino, -10.0);
+    assertEquals(StatusTransferencia.VALOR_INVALIDO, status);
+    assertEquals(10_000.0, origem.getSaldo(), DELTA);
+    assertEquals(0.0, destino.getSaldo(), DELTA);
+  }
+
+  @Test
+  void mesmaContaTemPrioridadeSobreValorInvalido() {
+    StatusTransferencia status = servico.transferir(origem, origem, 0.0);
+    assertEquals(StatusTransferencia.MESMA_CONTA, status);
+    assertEquals(10_000.0, origem.getSaldo(), DELTA);
+    assertEquals(0.0, destino.getSaldo(), DELTA);
+  }
+
+  @Test
+  void saldoInsuficienteParaValorMaisTarifaNaoAlteraNenhumaConta() {
+    origem = new Conta("Origem", 2000.0);
+    destino = new Conta("Destino", 150.0);
+    StatusTransferencia status = servico.transferir(origem, destino, 2000.0);
+    assertEquals(StatusTransferencia.SALDO_INSUFICIENTE, status);
+    assertEquals(2000.0, origem.getSaldo(), DELTA);
+    assertEquals(150.0, destino.getSaldo(), DELTA);
+  }
+
+  @Test
+  void saldoExatoParaValorMaisTarifaDeveSerAceito() {
+    origem = new Conta("Origem", 2020.0);
+    destino = new Conta("Destino", 150.0);
+    StatusTransferencia status = servico.transferir(origem, destino, 2000.0);
+    assertEquals(StatusTransferencia.OK, status);
+    assertEquals(0.0, origem.getSaldo(), DELTA);
+    assertEquals(2150.0, destino.getSaldo(), DELTA);
+  }
+
 }
